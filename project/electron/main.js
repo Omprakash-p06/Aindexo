@@ -60,7 +60,14 @@ function startBackend() {
     });
 
     backendProcess.stderr.on('data', (data) => {
-        console.error('Backend Error:', data.toString());
+        const message = data.toString();
+        // C# Console.Error writes here, but often it's just log info.
+        // Only label as error if it explicitly says "Error" or "Exception"
+        if (message.toLowerCase().includes('error') || message.toLowerCase().includes('exception')) {
+            console.error('Backend Error:', message);
+        } else {
+            console.log('Backend Log:', message);
+        }
     });
 
     backendProcess.on('close', (code) => {
@@ -99,4 +106,25 @@ ipcMain.on('send-command', (event, command) => {
 
 ipcMain.handle('get-home-dir', () => {
     return os.homedir();
+});
+
+ipcMain.on('window-minimize', () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) win.minimize();
+});
+
+ipcMain.on('window-maximize', () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+        if (win.isMaximized()) {
+            win.unmaximize();
+        } else {
+            win.maximize();
+        }
+    }
+});
+
+ipcMain.on('window-close', () => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) win.close();
 });

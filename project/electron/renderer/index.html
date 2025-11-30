@@ -6,12 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI File Organizer</title>
     <link href="./output.css" rel="stylesheet" />
-</head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 
-<body>
-    <div id="root"></div>
+    <!-- Import Map for Modules -->
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "./shims/react.js",
+                "react-dom/client": "./shims/react-dom.js",
+                "react-dom": "./shims/react-dom.js",
+                "three": "https://esm.sh/three@0.160.0",
+                "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.16?external=react,react-dom,three",
+                "@react-three/drei": "https://esm.sh/@react-three/drei@9.99.0?external=react,react-dom,three,@react-three/fiber",
+                "@react-three/rapier": "https://esm.sh/@react-three/rapier@1.3.0?external=react,react-dom,three,@react-three/fiber",
+                "meshline": "https://esm.sh/meshline@3.3.1?external=three,react,react-dom",
+                "uuid": "https://esm.sh/uuid@9.0.1"
+            }
+        }
+    </script>
 
-    <!-- Load React from CDN -->
+    <!-- Load React from CDN (UMD for legacy components) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -23,12 +41,49 @@
     <script type="text/babel" src="./components/FileCard.jsx"></script>
     <script type="text/babel" src="./components/FolderCard.jsx"></script>
     <script type="text/babel" src="./components/OrganizeButton.jsx"></script>
+    <script type="text/babel" src="./components/ScrambledText.jsx"></script>
+    <script type="text/babel" src="./WindowControls.jsx"></script>
+    <script type="text/babel" src="./components/GlassSurface.jsx"></script>
+    <script type="text/babel" src="./components/GlassIcons.jsx"></script>
+    <script type="text/babel" src="./components/FileManager.jsx"></script>
+    <script type="text/babel" src="./components/ProfileCard.jsx"></script>
+    <script type="text/babel" src="./components/Settings.jsx"></script>
     <script type="text/babel" src="./App.jsx"></script>
+</head>
+
+<body>
+    <div id="root" style="color: white; padding: 20px;">Loading React App...</div>
+    <script>
+        window.onerror = function (message, source, lineno, colno, error) {
+            console.error('Global Error:', message, 'at', source, ':', lineno, ':', colno);
+            const root = document.getElementById('root');
+            if (root) {
+                root.innerHTML += `<div style="color: red; padding: 20px; background: rgba(0,0,0,0.8); position: fixed; top: 0; left: 0; z-index: 9999;">
+                    <h3>Application Error</h3>
+                    <pre>${message}\n${source}:${lineno}</pre>
+                </div>`;
+            }
+        };
+    </script>
 
     <!-- Mount the app -->
     <script type="text/babel">
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        console.log("Index: Starting mount process...");
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+            console.error("Index: Root element not found!");
+        } else {
+            console.log("Index: Root element found, creating root...");
+            try {
+                const root = ReactDOM.createRoot(rootElement);
+                console.log("Index: Root created, rendering App...");
+                root.render(<App />);
+                console.log("Index: App render called.");
+            } catch (e) {
+                console.error("Index: Error mounting App:", e);
+                rootElement.innerHTML = `<div style="color: red; padding: 20px;"><h3>Mount Error</h3><pre>${e.message}</pre></div>`;
+            }
+        }
     </script>
 </body>
 

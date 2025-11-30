@@ -41,6 +41,16 @@ public class SQLiteStore : IDisposable
     public void InsertOrUpdateMetadata(FileMetadata metadata, string path)
     {
         using var cmd = _connection.CreateCommand();
+        
+        // First, delete any existing record with this path but different FileID (stale entry)
+        cmd.CommandText = "DELETE FROM files WHERE path = $path AND (volume != $vol OR fileIdLow != $low OR fileIdHigh != $high)";
+        cmd.Parameters.AddWithValue("$vol", metadata.Volume);
+        cmd.Parameters.AddWithValue("$low", metadata.FileIdLow);
+        cmd.Parameters.AddWithValue("$high", metadata.FileIdHigh);
+        cmd.Parameters.AddWithValue("$path", path);
+        cmd.ExecuteNonQuery();
+
+        // Now perform the upsert based on FileID
         cmd.CommandText = @"
             INSERT INTO files (volume, fileIdLow, fileIdHigh, path, size, modified)
             VALUES ($vol, $low, $high, $path, $size, $mod)
@@ -49,10 +59,7 @@ public class SQLiteStore : IDisposable
                 size = excluded.size,
                 modified = excluded.modified;
         ";
-        cmd.Parameters.AddWithValue("$vol", metadata.Volume);
-        cmd.Parameters.AddWithValue("$low", metadata.FileIdLow);
-        cmd.Parameters.AddWithValue("$high", metadata.FileIdHigh);
-        cmd.Parameters.AddWithValue("$path", path);
+        // Parameters are already added above, but we need to add size and mod
         cmd.Parameters.AddWithValue("$size", metadata.Size);
         cmd.Parameters.AddWithValue("$mod", metadata.ModifiedTime);
         cmd.ExecuteNonQuery();
@@ -139,7 +146,10 @@ public class SQLiteStore : IDisposable
 
     public void Commit()
     {
-        // No-op for WAL mode usually, but can be used for explicit checkpoints if needed
+        // Force a checkpoint to ensure data is written from WAL to the main DB file
+        using var cmd = _connection.CreateCommand();
+        cmd.CommandText = "PRAGMA wal_checkpoint(FULL);";
+        cmd.ExecuteNonQuery();
     }
 
     public void InsertEmbedding(string path, float[] embedding)

@@ -1,12 +1,65 @@
 const { useState, useEffect } = React;
-const { TargetCursor, StarBorder, FolderCard, OrganizeButton } = window;
+const { TargetCursor, StarBorder, FolderCard, OrganizeButton, WindowControls, ScrambledText, GlassSurface, GlassIcons, FileManager, Settings } = window;
 
 const App = () => {
+  console.log("App: Component rendering...");
   const [status, setStatus] = useState('idle');
   const [foldersScanned, setFoldersScanned] = useState(0);
   const [preview, setPreview] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
   const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('home');
+  const [scanStats, setScanStats] = useState({
+    totalFiles: 0,
+    newFiles: 0,
+    updatedFiles: 0,
+    deletedFiles: 0,
+    lastScanTime: null
+  });
+
+  const dockItems = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      ),
+      color: 'blue'
+    },
+    {
+      id: 'organize',
+      label: 'Organize',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+      ),
+      color: 'purple'
+    },
+    {
+      id: 'manage',
+      label: 'Manage',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+      ),
+      color: 'green'
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+      color: 'gray'
+    }
+  ];
 
   useEffect(() => {
     window.api.onResponse((data) => {
@@ -17,6 +70,7 @@ const App = () => {
         setFoldersScanned(data.data.foldersScanned);
       } else if (data.event === 'indexStatus') {
         console.log(`Database contains ${data.data.totalFiles} files`);
+        setScanStats(prev => ({ ...prev, totalFiles: data.data.totalFiles }));
       } else if (data.event === 'status') {
         console.log("Setting status to:", data.data.state);
         setStatus(data.data.state);
@@ -24,6 +78,7 @@ const App = () => {
         console.log("Setting preview data:", data.data);
         if (data.data && data.data.Categories) {
           setPreview(data.data);
+          setActiveTab('organize'); // Switch to organize tab on preview
         } else {
           console.error("Invalid preview data format:", data.data);
         }
@@ -34,8 +89,13 @@ const App = () => {
       } else if (data.event === 'scanSummary') {
         const { newFiles, updatedFiles, deletedFiles, totalChecked, totalInDb } = data.data;
         console.log(`Scan Summary: ${newFiles} new, ${updatedFiles} updated, ${deletedFiles} deleted`);
-        console.log(`Total: ${totalInDb} files in database, ${totalChecked} files checked`);
-        alert(`Scan complete!\nNew: ${newFiles}\nUpdated: ${updatedFiles}\nDeleted: ${deletedFiles}\nTotal in DB: ${totalInDb}`);
+        setScanStats({
+          totalFiles: totalInDb,
+          newFiles,
+          updatedFiles,
+          deletedFiles,
+          lastScanTime: new Date().toLocaleTimeString()
+        });
       } else if (data.event === 'error') {
         console.error("Backend error:", data.data.message);
         alert("Error: " + data.data.message);
@@ -75,83 +135,149 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen text-white p-8 relative overflow-hidden">
+    <div className="min-h-screen text-white p-8 relative overflow-hidden bg-black flex flex-col">
       <TargetCursor />
 
-      <header className="flex justify-between items-center mb-12 relative z-10">
-        <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-          AIndexo
-        </h1>
-        <div className="flex gap-4">
-          <StarBorder onClick={handleScan} disabled={status !== 'idle'}>
-            <span className="px-6 py-2">{status === 'scanning' ? 'Scanning...' : 'Scan Files'}</span>
-          </StarBorder>
-          <OrganizeButton onClick={handleOrganize} disabled={status !== 'idle'} />
+      <header className="flex justify-between items-center mb-8 relative z-10 drag-region shrink-0">
+        <div className="flex items-center gap-4">
+          <ScrambledText
+            text="AIndexo"
+            className="text-4xl font-bold text-white no-drag"
+          />
+        </div>
+
+        <div className="flex gap-4 items-center">
+          <div className="flex gap-4 no-drag">
+            <StarBorder onClick={handleScan} disabled={status !== 'idle'}>
+              <span className="px-6 py-2">{status === 'scanning' ? 'Scanning...' : 'Scan Files'}</span>
+            </StarBorder>
+            <OrganizeButton onClick={handleOrganize} disabled={status !== 'idle'} />
+          </div>
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+          <WindowControls />
         </div>
       </header>
 
-      <main className="grid grid-cols-12 gap-8 relative z-10">
-        <div className="col-span-4 space-y-6">
-          <div className="glass-panel p-6 rounded-2xl">
-            <h2 className="text-xl font-semibold mb-4">Status</h2>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Current Activity</span>
-              <span className="text-blue-400 font-mono">{status.toUpperCase()}</span>
-            </div>
-            <div className="mt-4">
-              <span className="text-gray-400">Files Scanned</span>
-              <div className="text-3xl font-bold mt-1">{foldersScanned}</div>
-            </div>
-          </div>
-
-          <div className="glass-panel p-6 rounded-2xl">
-            <h2 className="text-xl font-semibold mb-4">Semantic Search</h2>
-            <input
-              type="text"
-              value={query}
-              onChange={handleSearch}
-              placeholder="Find files by meaning..."
-              className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors cursor-target"
-            />
-            <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto">
-              {searchResults.map((res, i) => (
-                <div key={i} className="p-3 hover:bg-white/5 rounded-lg transition-colors cursor-pointer group">
-                  <div className="text-sm truncate text-gray-300 group-hover:text-white">{res.Path}</div>
-                  <div className="text-xs text-blue-400 mt-1">Score: {(res.Score * 100).toFixed(1)}%</div>
+      <main className="flex-1 relative z-10 overflow-hidden pb-32">
+        {activeTab === 'home' && (
+          <div className="grid grid-cols-12 gap-8 h-full">
+            <div className="col-span-4 space-y-6">
+              <div className="glass-panel p-6 rounded-2xl">
+                <h2 className="text-xl font-semibold mb-4">Status</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-gray-400">Activity</span>
+                  <span className="text-blue-400 font-mono">{status.toUpperCase()}</span>
                 </div>
-              ))}
+
+                <div className="space-y-4">
+                  <div className="bg-white/5 rounded-lg p-3">
+                    <div className="text-sm text-gray-400">Total Indexed</div>
+                    <div className="text-2xl font-bold text-white">{scanStats.totalFiles.toLocaleString()}</div>
+                  </div>
+
+                  {scanStats.lastScanTime && (
+                    <div className="bg-white/5 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-center text-xs text-gray-500 uppercase tracking-wider">
+                        <span>Last Scan</span>
+                        <span>{scanStats.lastScanTime}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <div className="text-green-400 font-bold">{scanStats.newFiles}</div>
+                          <div className="text-[10px] text-gray-400">New</div>
+                        </div>
+                        <div>
+                          <div className="text-yellow-400 font-bold">{scanStats.updatedFiles}</div>
+                          <div className="text-[10px] text-gray-400">Updated</div>
+                        </div>
+                        <div>
+                          <div className="text-red-400 font-bold">{scanStats.deletedFiles}</div>
+                          <div className="text-[10px] text-gray-400">Deleted</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl">
+                <h2 className="text-xl font-semibold mb-4">Semantic Search</h2>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={handleSearch}
+                  placeholder="Find files by meaning..."
+                  className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors cursor-target"
+                />
+                <div className="mt-4 space-y-2 max-h-[300px] overflow-y-auto">
+                  {searchResults.map((res, i) => (
+                    <div key={i} className="p-3 hover:bg-white/5 rounded-lg transition-colors cursor-pointer group">
+                      <div className="text-sm truncate text-gray-300 group-hover:text-white">{res.Path}</div>
+                      <div className="text-xs text-blue-400 mt-1">Score: {(res.Score * 100).toFixed(1)}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-span-8 flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-2">Welcome to AIndexo</h3>
+                <p>Select a tab below to get started.</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="col-span-8">
-          <div className="glass-panel p-6 rounded-2xl h-[calc(100vh-200px)] flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Organization Preview</h2>
-              {preview && (
-                <button
-                  onClick={handleConfirmOrganize}
-                  className="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-4 py-2 rounded-lg border border-green-500/30 transition-all cursor-target"
-                >
-                  Confirm Move
-                </button>
+        {activeTab === 'organize' && (
+          <div className="h-full">
+            <div className="glass-panel p-6 rounded-2xl h-full flex flex-col">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Organization Preview</h2>
+                {preview && (
+                  <button
+                    onClick={handleConfirmOrganize}
+                    className="bg-green-500/20 hover:bg-green-500/30 text-green-400 px-4 py-2 rounded-lg border border-green-500/30 transition-all cursor-target"
+                  >
+                    Confirm Move
+                  </button>
+                )}
+              </div>
+
+              {!preview ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <p>Click "Organize" in the header to generate suggestions</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 overflow-y-auto flex-1 pr-2">
+                  {preview.Categories.map((cat, i) => (
+                    <FolderCard key={i} category={cat} />
+                  ))}
+                </div>
               )}
             </div>
-
-            {!preview ? (
-              <div className="flex flex-col items-center justify-center h-[400px] text-gray-500">
-                <p>Click "Organize" to see AI suggestions</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4 overflow-y-auto flex-1 pr-2">
-                {preview.Categories.map((cat, i) => (
-                  <FolderCard key={i} category={cat} />
-                ))}
-              </div>
-            )}
           </div>
-        </div>
+        )}
+
+        {activeTab === 'manage' && (
+          <FileManager />
+        )}
+
+        {activeTab === 'settings' && (
+          <Settings />
+        )}
       </main>
+
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+        <GlassSurface
+          width="auto"
+          height="auto"
+          borderRadius={24}
+          className="px-8"
+        >
+          <GlassIcons items={dockItems} activeTab={activeTab} onSelect={setActiveTab} />
+        </GlassSurface>
+      </div>
     </div>
   );
 };

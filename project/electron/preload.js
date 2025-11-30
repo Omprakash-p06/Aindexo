@@ -4,5 +4,10 @@ contextBridge.exposeInMainWorld('api', {
     sendCommand: (command) => ipcRenderer.send('send-command', command),
     onResponse: (callback) => ipcRenderer.on('backend-response', (event, data) => callback(data)),
     removeResponseListener: () => ipcRenderer.removeAllListeners('backend-response'),
-    getHomeDir: () => ipcRenderer.invoke('get-home-dir')
+    getHomeDir: () => ipcRenderer.invoke('get-home-dir'),
+    windowControl: {
+        minimize: () => ipcRenderer.send('window-minimize'),
+        toggleMaximize: () => ipcRenderer.send('window-maximize'),
+        close: () => ipcRenderer.send('window-close')
+    }
 });

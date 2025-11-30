@@ -2,7 +2,7 @@ const { useEffect, useRef, useCallback, useMemo } = React;
 const { gsap } = window;
 
 const TargetCursor = ({
-    targetSelector = '.cursor-target',
+    targetSelector = '.cursor-target, button, a, [role="button"]',
     spinDuration = 2,
     hideDefaultCursor = true,
     hoverDuration = 0.2,
