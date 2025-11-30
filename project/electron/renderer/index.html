@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI File Organizer</title>
+    <link href="./output.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- Load React from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+
+    <!-- Load components in dependency order -->
+    <script type="text/babel" src="./TargetCursor.jsx"></script>
+    <script type="text/babel" src="./StarBorder.jsx"></script>
+    <script type="text/babel" src="./components/FileCard.jsx"></script>
+    <script type="text/babel" src="./components/FolderCard.jsx"></script>
+    <script type="text/babel" src="./components/OrganizeButton.jsx"></script>
+    <script type="text/babel" src="./App.jsx"></script>
+    <script type="text/babel" src="./app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,41 @@
+# Build outputs
+project/backend/bin/
+project/backend/obj/
+project/backend/*.db
+project/backend/*.db-shm
+project/backend/*.db-wal
+
+# Frontend build
+project/electron/node_modules/
+project/electron/dist/
+project/electron/output/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Model files (too large for git)
+project/backend/models/*.onnx
+
+# User data
+files.db
