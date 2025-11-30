@@ -109,6 +109,9 @@ public class DirectoryScanner
         
         Console.Error.WriteLine($"Starting incremental scan. Database has {previous.Count} files.");
         
+        // Estimate total files (use previous count as estimate)
+        int estimatedTotal = Math.Max(previous.Count, 1000);
+        
         // Enqueue roots
         foreach (var path in rootPaths)
         {
@@ -123,7 +126,7 @@ public class DirectoryScanner
                 {
                     if (_directories.TryDequeue(out var currentDir))
                     {
-                        ScanDirectoryIncremental(currentDir, previous, seen, token);
+                        ScanDirectoryIncremental(currentDir, previous, seen, token, estimatedTotal);
                     }
                 }
             }, token);
@@ -157,7 +160,7 @@ public class DirectoryScanner
         });
     }
 
-    private void ScanDirectoryIncremental(string dirPath, HashSet<string> previous, ConcurrentDictionary<string, byte> seen, CancellationToken token)
+    private void ScanDirectoryIncremental(string dirPath, HashSet<string> previous, ConcurrentDictionary<string, byte> seen, CancellationToken token, int estimatedTotal)
     {
         if (ExclusionRules.ShouldSkip(Path.GetFileName(dirPath))) return;
 
@@ -210,6 +213,14 @@ public class DirectoryScanner
                             _updatedFilesCount++;
                             IndexUpdatedFile(fullPath, size, modified);
                         }
+                    }
+                    
+                    // Send progress update every 50 files
+                    int currentCount = seen.Count;
+                    if (currentCount % 50 == 0)
+                    {
+                        int percentage = Math.Min(100, (currentCount * 100) / estimatedTotal);
+                        IPC.Send("scanProgress", new { current = currentCount, estimated = estimatedTotal, percentage });
                     }
                 }
 

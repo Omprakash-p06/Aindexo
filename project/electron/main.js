@@ -128,3 +128,30 @@ ipcMain.on('window-close', () => {
     const win = BrowserWindow.getFocusedWindow();
     if (win) win.close();
 });
+
+// Shell integration for file operations
+const { shell } = require('electron');
+
+ipcMain.handle('open-in-explorer', async (event, filePath) => {
+    try {
+        shell.showItemInFolder(filePath);
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to open in explorer:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('open-file', async (event, filePath) => {
+    try {
+        const result = await shell.openPath(filePath);
+        if (result) {
+            console.error('Failed to open file:', result);
+            return { success: false, error: result };
+        }
+        return { success: true };
+    } catch (error) {
+        console.error('Failed to open file:', error);
+        return { success: false, error: error.message };
+    }
+});

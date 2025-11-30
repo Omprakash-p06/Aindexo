@@ -76,17 +76,31 @@ public class EmbeddingEngine : IDisposable
 
     private long[] Tokenize(string text, int maxLength)
     {
-        // Very naive hashing tokenizer for MVP demonstration
-        // Real implementation requires vocab.txt
+        // Improved tokenizer for better filename handling
+        // Normalize: lowercase, preserve alphanumeric and spaces
+        text = text.ToLowerInvariant();
+        
+        // Replace common separators with spaces for better tokenization
+        text = text.Replace('_', ' ').Replace('-', ' ').Replace('.', ' ');
+        
+        // Remove extra spaces
+        text = string.Join(" ", text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+        
         long[] tokens = new long[maxLength];
         tokens[0] = 101; // [CLS]
         
         int idx = 1;
-        foreach (char c in text)
+        // Use word-level hashing instead of character-level
+        var words = text.Split(' ');
+        foreach (var word in words)
         {
             if (idx >= maxLength - 1) break;
-            tokens[idx++] = (c % 30000) + 100; // Dummy mapping
+            
+            // Hash each word to a token
+            int hash = word.GetHashCode();
+            tokens[idx++] = Math.Abs(hash % 20000) + 1000; // Range: 1000-21000
         }
+        
         tokens[idx] = 102; // [SEP]
         
         return tokens;

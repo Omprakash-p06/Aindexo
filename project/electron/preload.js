@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('api', {
     onResponse: (callback) => ipcRenderer.on('backend-response', (event, data) => callback(data)),
     removeResponseListener: () => ipcRenderer.removeAllListeners('backend-response'),
     getHomeDir: () => ipcRenderer.invoke('get-home-dir'),
+    openInExplorer: (filePath) => ipcRenderer.invoke('open-in-explorer', filePath),
+    openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
     windowControl: {
         minimize: () => ipcRenderer.send('window-minimize'),
         toggleMaximize: () => ipcRenderer.send('window-maximize'),

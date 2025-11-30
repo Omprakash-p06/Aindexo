@@ -7,20 +7,15 @@
         "build:css": "tailwindcss -i ./renderer/styles.css -o ./renderer/output.css"
     },
     "dependencies": {
-        "@react-three/drei": "^10.7.7",
-        "@react-three/fiber": "^9.4.2",
-        "@react-three/rapier": "^2.2.0",
         "clsx": "^2.1.1",
         "concurrently": "^9.2.1",
         "cross-env": "^10.1.0",
         "framer-motion": "^12.23.24",
         "gsap": "^3.13.0",
         "lucide-react": "^0.555.0",
-        "meshline": "^3.3.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "tailwind-merge": "^3.4.0",
-        "three": "^0.181.2",
         "wait-on": "^9.0.3"
     },
     "devDependencies": {

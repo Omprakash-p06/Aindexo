@@ -116,6 +116,13 @@ class Program
                         case "exit":
                             _isRunning = false;
                             break;
+
+                        case "clear_data":
+                            Console.Error.WriteLine("Executing clear_data command...");
+                            store.ClearDatabase();
+                            Console.Error.WriteLine("Database cleared successfully.");
+                            IPC.Send("dataCleared", new { });
+                            break;
                     }
                 }
                 catch (Exception ex)

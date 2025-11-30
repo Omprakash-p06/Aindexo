@@ -178,6 +178,24 @@ const Settings = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Data Management Section */}
+                <div className="glass-panel p-6 rounded-2xl">
+                    <h2 className="text-xl font-bold text-white mb-4">Data Management</h2>
+                    <p className="text-gray-400 text-sm mb-4">
+                        Clear all indexed file data. This will trigger a full deep scan next time you scan.
+                    </p>
+                    <button
+                        onClick={() => {
+                            if (confirm('Are you sure you want to clear all indexed data? This cannot be undone.')) {
+                                window.api.sendCommand({ action: 'clear_data', payload: {} });
+                            }
+                        }}
+                        className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50 font-semibold py-3 rounded-lg transition-colors cursor-target"
+                    >
+                        Clear Indexed Data
+                    </button>
+                </div>
             </div>
 
             <div className="col-span-8 h-full relative">

@@ -90,6 +90,30 @@ public class SQLiteStore : IDisposable
         cmd2.ExecuteNonQuery();
     }
 
+    public void ClearDatabase()
+    {
+        try 
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = @"
+                DELETE FROM files;
+                DELETE FROM file_state;
+            ";
+            int rows = cmd.ExecuteNonQuery();
+            Console.Error.WriteLine($"ClearDatabase: Deleted rows. Rows affected: {rows}");
+            
+            // Force checkpoint
+            using var cmd2 = _connection.CreateCommand();
+            cmd2.CommandText = "PRAGMA wal_checkpoint(FULL);";
+            cmd2.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"ClearDatabase failed: {ex}");
+            throw;
+        }
+    }
+
     public HashSet<string> GetExistingPaths()
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
