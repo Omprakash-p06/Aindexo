@@ -24,7 +24,12 @@
     <script type="text/babel" src="./components/FolderCard.jsx"></script>
     <script type="text/babel" src="./components/OrganizeButton.jsx"></script>
     <script type="text/babel" src="./App.jsx"></script>
-    <script type="text/babel" src="./app.js"></script>
+
+    <!-- Mount the app -->
+    <script type="text/babel">
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 
 </html>
